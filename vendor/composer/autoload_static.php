@@ -6,8 +6,18 @@ namespace Composer\Autoload;
 
 class ComposerStaticInita9f26f3c99c6016ef815402dc30f25a1
 {
-    public static $fallbackDirsPsr4 = array (
-        0 => __DIR__ . '/..' . '/naluri/php-classes/src',
+    public static $prefixLengthsPsr4 = array (
+        'N' => 
+        array (
+            'Naluri\\' => 7,
+        ),
+    );
+
+    public static $prefixDirsPsr4 = array (
+        'Naluri\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/naluri/php-classes/src',
+        ),
     );
 
     public static $prefixesPsr0 = array (
@@ -41,7 +51,8 @@ class ComposerStaticInita9f26f3c99c6016ef815402dc30f25a1
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->fallbackDirsPsr4 = ComposerStaticInita9f26f3c99c6016ef815402dc30f25a1::$fallbackDirsPsr4;
+            $loader->prefixLengthsPsr4 = ComposerStaticInita9f26f3c99c6016ef815402dc30f25a1::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInita9f26f3c99c6016ef815402dc30f25a1::$prefixDirsPsr4;
             $loader->prefixesPsr0 = ComposerStaticInita9f26f3c99c6016ef815402dc30f25a1::$prefixesPsr0;
             $loader->classMap = ComposerStaticInita9f26f3c99c6016ef815402dc30f25a1::$classMap;
 
