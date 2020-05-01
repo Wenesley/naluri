@@ -13,13 +13,13 @@
 		];
 
 
-		public function __construct($opts = array()){ // Parametros = recebe algumas opções (dados) da classe, que vem da rota.
+		public function __construct($opts = array(), $tpl_dir = "/views/"){ // Parametros = recebe algumas opções (dados) da classe, que vem da rota. Foi acrescentado o parametro $tpl_dir, para ficar dinâmico passar o diretório das páginas, que por padrão e views.
 
 			$this->options = array_merge($this->defaults, $opts); // array_merge - o último sobrescreve o primeiro. (vai mesclar e guardar no atributo)
 
 			$config = array(
 				//o template precisa de uma pasta para pegar os arquivos html e uma pasta de cache para salvar temporariamente
-				"tpl_dir"       => $_SERVER["DOCUMENT_ROOT"]."/views/", // A partir do diretório ROOT procure a pasta tal...(views).
+				"tpl_dir"       => $_SERVER["DOCUMENT_ROOT"].$tpl_dir, // A partir do diretório ROOT procure a pasta tal...(views).
 				"cache_dir"     => $_SERVER["DOCUMENT_ROOT"]."/views-cache/",
 				"debug"         => false // set to false to improve the speed
 			);
