@@ -9,6 +9,8 @@
 		private $tpl;
 		private $options = [];
 		private $defaults = [ //recebe opçoes padrões (váriveis que vem da rota)
+			"header"=> true, // estamos dizendo que o header por padrão é true, podemos desabilitá-lo apenas com false.
+			"footer"=> true, // estamos dizendo que o footer por padrão é true, podemos desabilitá-lo apenas com false.
 			"data"=>[]
 		];
 
@@ -30,7 +32,7 @@
 
 			$this->setData($this->options["data"]);			
 
-			$this->tpl->draw("header"); //desenha o template na página header.html. Qual a primeira coisa que vai na Página? (Cabeçalho). Será criado na pasta views.
+			if ($this->options["header"] === true) $this->tpl->draw("header"); //desenha o template na página header.html, somente se o header for true, no caso da tela de login será falso. Qual a primeira coisa que vai na Página? (Cabeçalho). Será criado na pasta views.
 		}
 
 
@@ -54,9 +56,9 @@
 		}
 
 		public function __destruct(){
-			//quando a página morrer...(sair da memória do php) o cabeçalho será criado o rodapé.
+			//quando a página morrer...(sair da memória do php) o cabeçalho será criado o rodapé, somente se o footer for true.
 			//iremos fazer o draw do footer.
-			$this->tpl->draw("footer");
+			if ($this->options["footer"] === true) $this->tpl->draw("footer");
 			
 		}
 	}
