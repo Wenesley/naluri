@@ -36,13 +36,6 @@
 
 		}
 
-		//método responsável por pegar todos os valores das classes de domínio.
-		public function getValues($data = array())
-		{
-
-			return $this->values;
-
-		}
 
 		//método responsável por settar todos os valores das classes de domínio.
 		public function setValues($data = array())
@@ -51,11 +44,19 @@
 			foreach ($data as $key => $value) {
 				//tudo que for criar dinamicamente no php tem que colocar entre chaves {}.
 				//{"set".$key} = esse é o nome do metodo.
-				//($value) = valor dos campos
+				//($value) = valor dos campos				
 				$this->{"set".$key}($value);
 			}
 
 		}
+
+		//método responsável por pegar todos os valores das classes de domínio.
+		public function getValues($data = array())
+		{
+
+			return $this->values;
+
+		}	
 		
 		
 	}
