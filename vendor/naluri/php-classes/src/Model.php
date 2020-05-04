@@ -25,7 +25,7 @@
 			switch ($method) {
 				case 'get':
 					//pega o valor da variável $fieldName
-					return $this->values[$fieldName];
+					return (isset($this->values[$fieldName])) ? $this->values[$fieldName] : NULL;
 					break;
 
 				case 'set':
@@ -51,7 +51,7 @@
 		}
 
 		//método responsável por pegar todos os valores das classes de domínio.
-		public function getValues($data = array())
+		public function getValues()
 		{
 
 			return $this->values;
