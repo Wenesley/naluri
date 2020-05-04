@@ -4,12 +4,14 @@
 
 	use \Naluri\DB\Sql; //a primeira contrabarra se dá pq a tem que voltar na raiz do projeto.
 	use \Naluri\Model; //classe responsável por gerar os métodos getters e setters automáticamente.
+	use \Naluri\Mailer;
 
 	//Ao invés de criar em cada classe metodos get e set, foi decidido criar uma classe capaz de gerar esses métodos mágicos, por isso a classe herda de Model.
 	class User extends Model
-	{
-		//Constante do tipo SESSION para armazer os dados do usuário.
-		const SESSION = "User";
+	{		
+		const SESSION = "User"; //Constante do tipo SESSION para armazer os dados do usuário.
+		const SECRET = "NaluriPhp7password"; //chave para criptografar e descriptografar, no minimo 16 caracteres.
+		const SECRET_IV = "NaluriPhp7password_IV";
 
 		//método que autentica login e senha do usuário.
 		public static function login($login, $password)
@@ -160,6 +162,133 @@
 
 			$sql->query("CALL sp_users_delete(:iduser)", array(
 				"iduser"=>$this->getiduser()
+			));
+		}
+
+		//método statico que fazer todas as validações.
+		public static function getForgot($email)
+		{
+
+			$sql = new Sql();
+
+			//busca todos os dados da tabela persons e users pelo email digitado no formulario, pois precisaremos do id do usuário.
+			$results = $sql->select("SELECT * FROM tb_persons a
+				INNER JOIN tb_users b
+				USING(idperson) WHERE a.desemail = :email;
+				", array(
+					":email"=>$email
+				));			
+
+			if(count($results) === 0)
+			{	
+				//caso não encontre o email no banco, é gerado mensagem na tela do usuário.
+				throw new \Exception("Não foi possível recuperar a senha.");
+				
+			} 
+			else
+			{	
+				//atribui à variável $data o resultado da busca dos dados das tabelas persons e users pelo email digitado.
+				$data = $results[0];
+
+				//chama a procedure no banco de dados, responsável por inserir o iduser e desip na tabela tb_userspasswordsrecoveries.
+				$resultsRecovery = $sql->select("CALL sp_userspasswordsrecoveries_create(:iduser, :desip)", array(                       
+					":iduser"=>$data["iduser"],
+					":desip"=>$_SERVER["REMOTE_ADDR"] //constante responsável por pegar o ip do usuário que solicitou redefinição de senha.
+				));
+			}
+
+			if(count($resultsRecovery) === 0)
+			{	
+				//caso tenha gerado erro ao chamar e ou executar a procedure spuserspasswordsrecoveries_create.
+				throw new \Exception("Não foi possível recuperar a senha.");				
+			} 
+			else
+			{
+				//se conseguiu executar a chamada da procedure entra nesse bloco e pega o resultado da consulta, pois essa consulta retorna o idrecovery da tabela tb_userspasswordsrecoveries.
+				$dataRecovery = $resultsRecovery[0];
+
+				//precisamos gerar um código para criptografar o idrecovery para enviar como um link para o email do usuário, para que outras pessoas não tentem utilitar esse número, ou a sequencia de outros números.
+				//para criptografar vamos ter alguns parametros, e então transformaremos tudo em base64 para transformar o código gerado em texto.
+				$code = openssl_encrypt($dataRecovery['idrecovery'], 'AES-128-CBC', pack("a16", User::SECRET), 0, pack("a16", User::SECRET_IV));
+
+				$code = base64_encode($code);
+
+				//montar o link, endereço que vai receber esse código, e esse link vai ser enviado por email.
+				// a rota é http://www.naluri.com.br/admin/forgot/reset (link para passar o código e validar), como vamos passar esse código via get ("?") qual código a variável code (code=#code);
+				$link = "http://www.naluri.com.br/admin/forgot/reset?code=$code";
+
+				$subject = "Redefinir senha da Naluri";
+				//o que vamos fazer agora? precisamos enviar por email. Vamos utilizar a classe PhpMailer. PhpMailer é uma classe que já vem pronta, parametrizada, precisamos apenas preencher, e se possível utilizar um template. Para facilitar será criada uma classe como se fosse uma Factory, uma classe que vai criar a configuração do PhpMailer.
+				//Vamos criar o email, pois a classe Mailer já está pronta.
+				//O construtor recebe como parametros, o email, o nome do destinatário, o assunto, o nome do template, e por ultimo os dados para envio.
+				$mailer = new Mailer($data["desemail"], $data["desperson"], $subject, "forgot", array(
+					"name"=>$data["desperson"], //foi ferificado na página forgot.html, quais as variáveis são requeridas. ({$..})
+					"link"=>$link
+				));
+
+				$mailer->send(); //envia de fato o email para o destinatário.
+
+				return $data; //retorna todos os dados das tabelas users e persons, caso queira utilizá-los.				
+			}			
+
+		}
+
+		//médoto responsável por verificar de que usuário pertence esse código e validá-lo.
+		//fazer o processo inverso da criptografia.
+		public static function validForgotDecrypt($code)
+		{
+			//ultimo processa da criptografia foi tranformar todo o codigo para base64, agora então utilizamos decode para descriptografar o mesmo codigo.
+			$code = base64_decode($code);
+
+			//para criptografar foi utlilizar o openssl_encrypt agora para descriptografar usamos "openssl_decrypt".
+			//passamos os mesmos parametros de utilizamos para criptografar. Após descriptografar armazenamos o resultado, ou seja o código na variável idrecovery.
+			$idrecovery = openssl_decrypt($code, 'AES-128-CBC', pack("a16", User::SECRET), 0, pack("a16", User::SECRET_IV));
+
+			$sql = new Sql();
+
+			//agora precisamos ir no banco de dados fazer a verificação. Esse id é válido, está no tempo, dentro de uma hora para ser utilizado, já foi utilizado? Vamos fazer uma query que vai verificar, fazer essa inteligênica.
+			//pegamos os dados da tabela tb_userspasswordsrecoveries, fazemos uma junçao com as tabelas tb_users e tb_persons pq precisamos do nome da pessoa para enviar para o template. Trazemos esses dados somente se a.idrecovery que foi salvo na tabela tb_userspasswordsrecoveries é o mesmo $idrecovery, verificamos também se campo a.dtrecovery que por padrão é NULL da tabela tb_userspasswordsrecoveries permanece NULL, pois assim tempos certeza que o código não foi utilizado, também é verifica a data que foi gerado "userspasswordsrecoveries", e somamos + 1 hora através da função mysql DATE_ADD a coluna a.dtregister da tabela tb_userspasswordsrecoveries, se a soma da data e hora da coluna + 1 hora, se for maior que a data e a hora de agora, então passou do tempo de redefinir a senha.
+			$results = $sql->select("
+				SELECT * FROM tb_userspasswordsrecoveries a
+				INNER JOIN tb_users b USING(iduser)
+				INNER JOIN tb_persons c USING(idperson)
+				WHERE a.idrecovery = :idrecovery
+				AND a.dtrecovery IS NULL
+				AND DATE_ADD(a.dtregister, INTERVAL 1 HOUR) >= NOW();
+			", array(
+				":idrecovery"=>$idrecovery
+		));
+
+			if(count($results) === 0)
+			{
+				throw new \Exception("Não foi possível recuperar a senha.");
+			}
+			else 
+			{
+				//Aqui foi encontrado o registro no banco de dados. Vamos devolver os deados desse usuário.
+				return $results[0];
+			}
+
+		}
+
+		public static function setForgotUsed($idrecovery)
+		{
+
+			$sql = new Sql();
+
+			$sql->query("UPDATE tb_userspasswordsrecoveries SET dtrecovery = NOW() WHERE idrecovery = :idrecovery", array(
+				":idrecovery"=>$idrecovery
+			));
+		}
+
+		public function setPassword($password)
+		{
+
+			$sql = new Sql();
+
+			$sql->query("UPDATE tb_users SET despassword = :password WHERE iduser = :iduser", array(
+				":password"=>$password,
+				":iduser"=>$this->getiduser()
 			));
 		}
 
