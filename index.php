@@ -409,7 +409,23 @@ $app->post("/admin/categories/:idcategory", function($idcategory) {
 
 });
 
+//criar uma rota para categoria
+$app->get("/categories/:idcategory", function($idcategory) {
 
+	$category = new Category();
+
+	$category->get((int)$idcategory);
+
+	//nesse caso não chamamos uma página, mas um template. Então só precisamos do page.
+	$page = new Page();
+
+	//chamar somete o template dessa categoria, e vamos passar os dados dessa categoria, para mostrar lá dentro.
+	$page->setTpl("category", [
+		'category'=>$category->getValues(),
+		'procucts'=>[]
+	]);
+
+});
 
 
 $app->run(); //Tudo carregado, vamos executar.

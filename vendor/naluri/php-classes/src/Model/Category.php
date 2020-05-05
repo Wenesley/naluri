@@ -30,6 +30,9 @@
 			));
 
 			$this->setValues($results[0]);
+
+			//atualiza as categorias na página principal do site (loja).
+			Category::updateFile();
 		}
 
 		public function get($idcategory){
@@ -50,6 +53,32 @@
 			$sql->query("DELETE FROM tb_categories WHERE idcategory = :idcategory", [
 				':idcategory'=>$this->getidcategory()
 			]);
+
+			//atualiza as categorias na página principal do site (loja).
+			Category::updateFile();
+		}
+
+		//método responsável por atualizar as categorias na página principal da loja.
+		//as categorias são atualizada à medida que cadastramos, editamos, ou excluimos uma categoria na parte administrativa.
+		public static function updateFile()
+		{
+			//tras todas as categorias que estão no banco de dados, e atribui à variável $categories.
+			$categories = Category::listAll();
+
+			//precisamos montar nosso html, categories-menu.html.
+			//preciso criara varias tags "li". ("<li><a href="#">Categoria Um</a></li>")
+			$html = [];
+			//cada resgistro que vem do banco de dados vamos chamar de "$row"
+			foreach ($categories as $row) {
+				//adiciona dados dentro do array.
+				//precisamos também da rota "/category/'.$row['idcategory']".
+				array_push($html, '<li><a href="/categories/'.$row['idcategory'].'">'.$row['descategory'].'</a></li>');
+			}
+
+			//precisamos salvar esse arquivo, receber como parametros o caminho do arquivo, e o conteúdo.
+			//como o conteudo "$html" é um array precisamos fazer um implode. 
+			file_put_contents($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "categories-menu.html" , implode('', $html));
+
 		}		
 
 	}

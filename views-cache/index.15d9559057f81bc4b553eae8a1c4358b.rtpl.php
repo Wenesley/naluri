@@ -200,4 +200,5 @@
                 </div>
             </div>
         </div>
-    </div> <!-- End brands area 
+    </div> <!-- End brands area -->
+    
