@@ -18,6 +18,19 @@
 			return $sql->select("SELECT * FROM tb_products ORDER BY desproduct");
 		}
 
+		//Faz checkList no produto para listar as imagens na loja.
+		public static function checkList($list)
+		{
+			//manipula $row na memoria
+			foreach ($list as &$row) {
+				$p = new Product();
+				$p->setValues($row);
+				$row = $p->getValues();
+			}
+
+			return $list;
+		}
+
 		public function save()
 		{
 			$sql = new Sql();
