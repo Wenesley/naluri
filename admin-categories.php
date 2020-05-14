@@ -3,6 +3,7 @@
 use \Naluri\PageAdmin;
 use \Naluri\Model\Category;
 use \Naluri\Model\User;
+use \Naluri\Model\Product;
 
 //rota responsável por abrir a página categories.html
 $app->get("/admin/categories", function(){
@@ -120,21 +121,69 @@ $app->post("/admin/categories/:idcategory", function($idcategory) {
 
 });
 
+
 //criar uma rota para categoria
-$app->get("/categories/:idcategory", function($idcategory) {
+$app->get("/admin/categories/:idcategory/products", function($idcategory) {
+
+	//na rota da administração, é necessário está logado, caso contrário redirecionar para tela de login.
+    User::verifyLogin();
 
 	$category = new Category();
 
 	$category->get((int)$idcategory);
 
 	//nesse caso não chamamos uma página, mas um template. Então só precisamos do page.
-	$page = new Page();
+	$page = new PageAdmin();
 
 	//chamar somete o template dessa categoria, e vamos passar os dados dessa categoria, para mostrar lá dentro.
-	$page->setTpl("category", [
+	$page->setTpl("categories-products", [
 		'category'=>$category->getValues(),
-		'procucts'=>[]
+		'productsRelated'=>$category->getProducts(),
+		'productsNotRelated'=>$category->getProducts(false)
 	]);
+
+});
+
+
+//criar uma rota para categoria
+$app->get("/admin/categories/:idcategory/products/:idproduct/add", function($idcategory, $idproduct) {
+
+	//na rota da administração, é necessário está logado, caso contrário redirecionar para tela de login.
+    User::verifyLogin();
+
+	$category = new Category();
+
+	$category->get((int)$idcategory);
+
+	$product = new Product();
+
+	$product->get((int)$idproduct);
+
+	$category->addProduct($product);
+
+	header("Location: /admin/categories/".$idcategory."/products");
+	exit;
+
+});
+
+//criar uma rota para categoria
+$app->get("/admin/categories/:idcategory/products/:idproduct/remove", function($idcategory, $idproduct) {
+
+	//na rota da administração, é necessário está logado, caso contrário redirecionar para tela de login.
+    User::verifyLogin();
+
+	$category = new Category();
+
+	$category->get((int)$idcategory);
+
+	$product = new Product();
+
+	$product->get((int)$idproduct);
+
+	$category->removeProduct($product);
+
+	header("Location: /admin/categories/".$idcategory."/products");
+	exit;
 
 });
 
