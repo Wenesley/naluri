@@ -3,6 +3,7 @@
 use \Naluri\Page;
 use \Naluri\Model\Product;
 use \Naluri\Model\Category;
+use \Naluri\Model\Cart;
 
 $app->get('/', function() { //qual o link da página index da loja. Raiz principal.
 
@@ -61,5 +62,15 @@ $app->get("/products/:desurl", function($desurl){
 	]);
 });
 
+$app->get("/cart", function(){
+
+	$cart = Cart::getFromSession();
+
+	$page = new Page();
+
+	$page->setTpl("cart");
+
+
+});
 
 ?>

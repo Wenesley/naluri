@@ -13,6 +13,57 @@
 		const SECRET = "NaluriPhp7password"; //chave para criptografar e descriptografar, no minimo 16 caracteres.
 		const SECRET_IV = "NaluriPhp7password_IV";
 
+		
+		public static function getFromSession()
+		{
+			
+			$user = new User();
+
+			if (isset($_SESSION[User::SESSION]) && (int)$_SESSION[User::SESSION]['iduser'] > 0) {				
+
+				$user->setValues($_SESSION[User::SESSION]);				
+			}
+
+			return $user;
+
+		}
+
+		//método responsável por verificar se está logado ou não.
+		public static function checkLogin($inadmin = true)
+		{
+
+			if(
+				!isset($_SESSION[User::SESSION]) //verifica se ela existe.
+				|| 
+				!$_SESSION[User::SESSION] //verifica se não está vazia.
+				|| 
+				!(int)$_SESSION[User::SESSION]["iduser"] > 0 //verifica se o idusuario na sessao é maior que 0.
+
+			) {
+
+				//não está logado
+				return false;
+				
+			} else {
+
+				if($inadmin === true && (bool)$_SESSION[User::SESSION]["inadmin"] === true) {
+
+					return true;
+
+				} else if ($inadmin === false) {
+					
+					return true;
+
+				} else {
+
+					return false;
+
+				}
+			}
+
+		}
+
+
 		//método que autentica login e senha do usuário.
 		public static function login($login, $password)
 		{	
@@ -62,22 +113,12 @@
 		public static function verifyLogin($inadmin = true)
 		{
 			
-			if (
-				!isset($_SESSION[User::SESSION]) //verifica se ela existe.
-				|| 
-				!$_SESSION[User::SESSION] //verifica se não está vazia.
-				|| 
-				!(int)$_SESSION[User::SESSION]["iduser"] > 0 //verifica se o idusuario na sessao é maior que 0.
-				|| 
-				(bool)$_SESSION[User::SESSION]["inadmin"] !== $inadmin //verifica se o usuário é funcionário ou cliente.
-				) 
-			{	
-				
+			if (User::checkLogin($inadmin)) 
+			{					
 				//caso não esteja logado redireciona para tela de login.
 				header("Location: /admin/login");
 
-				exit;
-				
+				exit;				
 			}
 
 		}
