@@ -145,6 +145,7 @@
 		}
 
 		//método responsável pela panginação dos produtos.
+		//recebe dois parametros, qual página estamos e quantos item queremos por página.
 		public function getProductsPage($page = 1, $itemsPerPage = 8)
 		{
 
@@ -165,8 +166,11 @@
 
 			]);
 
+			//retorna a quantidade de items que tem.
 			$resultsTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
 
+			//retorna todos os produtos(dados dos produtos), a quantidade linhas(quantos registros vieram)
+			//e a quantidade de páginas. (ceil função php que arredonda para cima)
 			return [
 				'data'=>Product::checkList($resultsProdutos),
 				'total'=>$resultsTotal[0]["nrtotal"],

@@ -15,7 +15,7 @@ $app->get('/', function() { //qual o link da página index da loja. Raiz princip
 	]); //quando chamamos o metodo setTpl e passamos o template, nesse caso ele chama a página index.html e adiciona o corpo da página. quando seguir para próxima linha após a chamda encerra a execução, ou seja limpa a memória do seu site, e automaticamente o método destruct é acionado, o arquivo footer.html e inserido no template.
 });
 
-//criar uma rota para categoria
+//criar uma rota para exibir os produtos por categoria, e a paginação.
 $app->get("/categories/:idcategory", function($idcategory) {
 	
 	$numberOfPage = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
@@ -45,6 +45,20 @@ $app->get("/categories/:idcategory", function($idcategory) {
 		'pages'=>$pages
 	]);
 
+});
+
+$app->get("/products/:desurl", function($desurl){
+
+	$product = new Product();
+
+	$product->getFromURL($desurl);
+
+	$page = new Page();
+
+	$page->setTpl("product-detail", [
+		'product'=>$product->getValues(),
+		'categories'=>$product->getCategories()
+	]);
 });
 
 

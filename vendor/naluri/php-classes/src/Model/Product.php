@@ -139,7 +139,36 @@
 			imagedestroy($image);
 
 			$this->checkPhoto();
+		}
+
+		//método responsável por buscar todos os produtos pelo campo desurl.
+		public function getFromURL($desurl)
+		{
+
+			$sql = new Sql();
+
+			$rows = $sql->select("SELECT * FROM tb_products WHERE desurl = :desurl LIMIT 1", [
+				':desurl'=>$desurl			
+			]);
+
+			$this->setValues($rows[0]);
 		}	
+
+
+		//método responsável por buscar a categoria em que o produto está relacionado 
+		//para detalhes do produdo.
+		public function getCategories()
+		{
+
+			$sql = new Sql();
+
+			return $sql->select("
+				SELECT * FROM tb_categories a  
+				INNER JOIN tb_productscategories b ON a.idcategory = b.idcategory 
+				WHERE b.idproduct = :idproduct", [
+					':idproduct'=>$this->getidproduct()
+			]);
+		}
 
 	}
 
