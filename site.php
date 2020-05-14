@@ -18,17 +18,31 @@ $app->get('/', function() { //qual o link da página index da loja. Raiz princip
 //criar uma rota para categoria
 $app->get("/categories/:idcategory", function($idcategory) {
 	
+	$numberOfPage = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
+	
 	$category = new Category();
 
 	$category->get((int)$idcategory);
 
+	$pagination = $category->getProductsPage($numberOfPage);
+
+	$pages = [];
+
+	for ($i=1; $i <= $pagination['pages'] ; $i++) { 
+		array_push($pages, [
+			'link'=>'/categories/'.$category->getidcategory().'?page='.$i,
+			'page'=>$i
+		]);
+	}
+
 	//nesse caso não chamamos uma página, mas um template. Então só precisamos do page.
-	$page = new Page();
+	$page = new Page();	
 
 	//chamar somete o template dessa categoria, e vamos passar os dados dessa categoria, para mostrar lá dentro.
 	$page->setTpl("category", [
 		'category'=>$category->getValues(),
-		'products'=>Product::checkList($category->getProducts())
+		'products'=>$pagination["data"],
+		'pages'=>$pages
 	]);
 
 });
