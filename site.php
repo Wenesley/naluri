@@ -68,8 +68,69 @@ $app->get("/cart", function(){
 
 	$page = new Page();
 
-	$page->setTpl("cart");
+	$page->setTpl("cart", [
+		'cart'=>$cart->getValues(),
+		'products'=>$cart->getProducts()
+	]);
 
+});
+
+$app->get("/cart/:idproduct/add", function($idproduct) {
+
+	$product = new Product();
+
+	$product->get((int)$idproduct);
+
+	//recupera ou cria um carrinho na sessão.
+	$cart = Cart::getFromSession();
+
+	$qtd = (isset($_GET['qtd'])) ? (int)$_GET['qtd'] : 1;
+
+	for ($i=0; $i < $qtd; $i++) { 
+
+		//adiciona o produto dentro do carrinho(que foi recuperado ou criado).
+		$cart->addProduct($product);
+	}	
+
+	header("Location: /cart");
+	exit;
+
+});
+
+//responsável por remover apenas um produto do carrinho.
+$app->get("/cart/:idproduct/minus", function($idproduct) {
+
+	$product = new Product();
+
+	$product->get((int)$idproduct);
+
+	//recupera ou cria um carrinho na sessão.
+	$cart = Cart::getFromSession();
+
+	//adiciona o produto dentro do carrinho(que foi recuperado ou criado).
+	$cart->removeProduct($product);
+
+	header("Location: /cart");
+	exit;
+
+});
+
+
+//responsável por remover todos os produto do carrinho.
+$app->get("/cart/:idproduct/remove", function($idproduct) {
+
+	$product = new Product();
+
+	$product->get((int)$idproduct);
+
+	//recupera ou cria um carrinho na sessão.
+	$cart = Cart::getFromSession();
+
+	//adiciona o produto dentro do carrinho(que foi recuperado ou criado).
+	$cart->removeProduct($product, true);
+
+	header("Location: /cart");
+	exit;
 
 });
 

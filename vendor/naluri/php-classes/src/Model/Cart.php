@@ -101,6 +101,65 @@
 
 			$this->setValues($results[0]);
 		}
+
+		//método responsável por adicionar um produto no carrinho de compras.
+		public function addProduct(Product $product)
+		{
+
+			$sql = new Sql();
+
+			$sql->query("INSERT INTO tb_cartsproducts (idcart, idproduct) VALUES (:idcart, :idproduct)", [
+				'idcart'=>$this->getidcart(),
+				'idproduct'=>$product->getidproduct()
+			]);
+		}
+
+		//Método responsável por remover o produto do carrinho de compras.
+		//Pode remover um ou todos os produtos do carrinho de compras.
+		public function removeProduct(Product $product, $all = false)
+		{
+
+			$sql = new Sql();
+
+			if($all){
+
+				$sql->query("UPDATE tb_cartsproducts SET dtremoved = NOW() WHERE idcart = :idcart AND idproduct = :idproduct AND dtremoved IS NULL", [
+					':idcart'=>$this->getidcart(),
+					'idproduct'=>$product->getidproduct()
+				]);
+
+			} else {
+
+				$sql->query("UPDATE tb_cartsproducts SET dtremoved = NOW() WHERE idcart = :idcart AND idproduct = :idproduct AND dtremoved IS NULL LIMIT 1", [
+					':idcart'=>$this->getidcart(),
+					'idproduct'=>$product->getidproduct()
+				]);
+
+			}
+
+		}
+
+
+		//método responsável por pegar(listar) todos os produtos que estão no carrinho de compras.	
+		public function getProducts()
+		{
+
+			$sql = new Sql();
+
+			$rows = $sql->select("
+				SELECT b.idproduct, b.desproduct, b.vlprice, b.vlwidth, b.vlheight, b.vllength, b.vlweight, b.desurl, COUNT(*) AS nrqtd, SUM(b.vlprice) AS vltotal
+				FROM tb_cartsproducts a
+				INNER JOIN tb_products b ON a.idproduct = b.idproduct
+				WHERE a.idcart = :idcart AND a.dtremoved IS NULL
+				GROUP BY b.idproduct, b.desproduct, b.vlprice, b.vlwidth, b.vlheight, b.vllength, b.vlweight, b.desurl
+				ORDER BY b.desproduct
+				", [
+					':idcart'=>$this->getidcart()
+				]);
+
+			return Product::checkList($rows);
+
+		}
 	}
 
 ?>
