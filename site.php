@@ -4,6 +4,9 @@ use \Naluri\Page;
 use \Naluri\Model\Product;
 use \Naluri\Model\Category;
 use \Naluri\Model\Cart;
+use \Naluri\Model\Address;
+use \Naluri\Model\User;
+
 
 $app->get('/', function() { //qual o link da página index da loja. Raiz principal.
 
@@ -147,6 +150,67 @@ $app->post("/cart/freight", function() {
 	exit;
 
 });
+
+
+//rota responsável pela requisição para finalizar compra.
+$app->get("/checkout", function(){
+
+	//para finalizar a compra, deve está logado na loja.
+	//Não é uma rota da Administração.
+	User::verifyLogin(false);
+
+	//pega o carrinho de compras da sessão.
+	$cart = Cart::getFromSession();
+
+	$address = new Address();
+	
+	$page = new Page();
+
+	$page->setTpl("checkout", [
+		'cart'=>$cart->getValues(),
+		'address'=>$address->getValues()
+	]);
+});
+
+
+//rota responsável pela requisição para logar na loja.
+$app->get("/login", function(){	
+	
+	$page = new Page();
+
+	$page->setTpl("login", [
+		'error'=>User::getMsgError() //passando o erro para o template.
+	]);
+});
+
+
+//rota responsável por logar e redirecionar para checkout.
+$app->post("/login", function(){	
+	
+	try {
+
+		User::login($_POST['login'], $_POST['password']);
+
+	}catch(Exception $e) {
+
+		User::setMsgError($e->getMessage());
+	}
+
+	header("Location: /checkout");
+	exit;
+});
+
+
+//rota responsável por deslogar e redirecionar para tela de login.
+$app->get("/logout", function(){	
+
+	User::logout();
+
+	header("Location: /login");
+	exit;	
+});
+
+
 
 
 ?>

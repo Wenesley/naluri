@@ -12,50 +12,55 @@
 		const SESSION = "User"; //Constante do tipo SESSION para armazer os dados do usuário.
 		const SECRET = "NaluriPhp7password"; //chave para criptografar e descriptografar, no minimo 16 caracteres.
 		const SECRET_IV = "NaluriPhp7password_IV";
-
+		const ERROR = "UserError"; //não podemos ter constantes com nomes iguais, pois uma sobrescreve a outra.
+		const ERROR_REGISTER = "UserErrorRegister";
 		
 		public static function getFromSession()
 		{
 			
 			$user = new User();
 
-			if (isset($_SESSION[User::SESSION]) && (int)$_SESSION[User::SESSION]['iduser'] > 0) {				
+			if (isset($_SESSION[User::SESSION]) && (int)$_SESSION[User::SESSION]['iduser'] > 0) {
 
-				$user->setValues($_SESSION[User::SESSION]);				
+				$user->setValues($_SESSION[User::SESSION]);
+
 			}
 
 			return $user;
 
 		}
 
-		//método responsável por verificar se está logado ou não.
+		//método responsável por verificar se está logado ou não, verificando um login da administração e da loja.
 		public static function checkLogin($inadmin = true)
 		{
-
+			//primeiro vamos verificar se tem alguem logado.
 			if(
-				!isset($_SESSION[User::SESSION]) //verifica se ela existe.
+				!isset($_SESSION[User::SESSION]) //verifica se a sessão do usuário não está definida.
 				|| 
-				!$_SESSION[User::SESSION] //verifica se não está vazia.
+				!$_SESSION[User::SESSION] //verifica se a sessão do usuário está vazia.
 				|| 
-				!(int)$_SESSION[User::SESSION]["iduser"] > 0 //verifica se o idusuario na sessao é maior que 0.
-
+				!(int)$_SESSION[User::SESSION]["iduser"] > 0 //verifica se o idusuario na sessao não é maior que 0.
 			) {
 
-				//não está logado
+				//Não está logado e redireciona para página de login.
 				return false;
 				
 			} else {
-
+				//a sessão do usuário passou por todos os testes acima. ela existe, não está vazia e o id é maior que 0.
+				//verificando se é um usuário da administração, e se a rota é da administração.
 				if($inadmin === true && (bool)$_SESSION[User::SESSION]["inadmin"] === true) {
-
+					//ok é um administrador e está logado.
 					return true;
 
+					//verificando se o usuário não é da Administração, ou seja é um usuário da loja(Cliente).
 				} else if ($inadmin === false) {
 					
+					//ok é um cliente, e está logado.
 					return true;
 
 				} else {
 
+					//Não está logado e redireciona para página de login.
 					return false;
 
 				}
@@ -64,15 +69,18 @@
 		}
 
 
-		//método que autentica login e senha do usuário.
+		//método que autentica o usuário e já cria a sessão do usuário logado.
 		public static function login($login, $password)
 		{	
 			//cria o objeto sql
 			$sql = new Sql();
 
 			//variável que recebe o resultado da consulta direto do banco de dados.
-			$results = $sql->select("SELECT * FROM tb_users WHERE deslogin = :LOGIN", array(
-				":LOGIN"=>$login				
+			$results = $sql->select("
+				SELECT * FROM tb_users a 
+				INNER JOIN tb_persons b ON a.idperson = b.idperson 
+				WHERE a.deslogin = :LOGIN", array(
+					":LOGIN"=>$login
 			));
 
 			//verifica se não trouxe resultado do banco de dados, se não trouxe executa a Exception.
@@ -90,6 +98,8 @@
 
 				$user = new User();
 
+				$data['desperson'] = utf8_encode($data['desperson']);
+
 				//chama o método setValues responsável por criar todos os campos setters gertters do usuário.
 				$user->setValues($data);
 
@@ -105,23 +115,34 @@
 
 				throw new \Exception("Usuário inexistente ou senha inválida.");
 			}
-
-
 		}
+
 
 		//método que verifica se o usuário está logado.
+		//verificando uma rota da administração.
 		public static function verifyLogin($inadmin = true)
 		{
-			
-			if (User::checkLogin($inadmin)) 
-			{					
-				//caso não esteja logado redireciona para tela de login.
-				header("Location: /admin/login");
+			//caso não esteja logado...
+			if (!User::checkLogin($inadmin)) 
+			{	
+				//Se for administrador, redireciona para login da administração
+				if($inadmin) {
 
-				exit;				
+					//verificando rota da Administração.
+					//caso não esteja logado redireciona para tela de login.
+					header("Location: /admin/login");
+
+				} else {
+
+					//verificando rota da Loja.
+					//caso não esteja logado redireciona para tela de login da loja.
+					header("Location: /login");	
+				}
+
+				exit;							
 			}
-
 		}
+
 
 		//método responsável para encerrar a sessao do usuário, delogar.
 		public static function logout()
@@ -130,6 +151,7 @@
 			$_SESSION[User::SESSION] = NULL;
 
 		}
+
 
 		//método responsável por listar todos os usuários do banco de dados.
 		public static function listAll()
@@ -149,9 +171,9 @@
 			
 			//Iremos chamar um procedure, pois ela vai inserir uma pessoa primeiro, pois precisamos saber qual o id dessa pessoa para poder inserir na tabela de users, pq ele precisa do idpessoa conforme estrutura da tabela no banco de dados. Vamos pegar o id do usuario que retornou, fazer um select com todos os dados do banco de dados que estão lá agora, juntar tudo e trazer de volta. Procedure é mais rápido do que o código php que iriamos fazer.
 			$results = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
-				":desperson"=>$this->getdesperson(), 
+				":desperson"=>utf8_decode($this->getdesperson()), 
 				":deslogin"=>$this->getdeslogin(),   //pegando os datos que estão no nosso objeto.
-				":despassword"=>$this->getdespassword(),//todos esses getters foram gerados pelo getValues da classe Model.
+				":despassword"=>User::getPasswordHash($this->getdespassword()),//todos esses getters foram gerados pelo getValues da classe Model.
 				":desemail"=>$this->getdesemail(),
 				":nrphone"=>$this->getnrphone(),
 				":inadmin"=>$this->getinadmin()
@@ -171,8 +193,15 @@
 				"iduser"=>$iduser
 			));
 
+
+			$data = $results[0];
+
+			$data['desperson'] = utf8_encode($data['desperson']);
+
 			//seta o resultado da consulta no próprio objeto.
-			$this->setValues($results[0]);
+			$this->setValues($data);
+
+
 		}
 
 		public function update()
@@ -183,9 +212,9 @@
 			//Iremos chamar um procedure, pois ela vai inserir uma pessoa primeiro, pois precisamos saber qual o id dessa pessoa para poder inserir na tabela de users, pq ele precisa do idpessoa conforme estrutura da tabela no banco de dados. Vamos pegar o id do usuario que retornou, fazer um select com todos os dados do banco de dados que estão lá agora, juntar tudo e trazer de volta. Procedure é mais rápido do que o código php que iriamos fazer.
 			$results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
 				":iduser"=>$this->getiduser(),
-				":desperson"=>$this->getdesperson(), 
+				":desperson"=>utf8_decode($this->getdesperson()), 
 				":deslogin"=>$this->getdeslogin(),   //pegando os datos que estão no nosso objeto.
-				":despassword"=>$this->getdespassword(),//todos esses getters foram gerados pelo getValues da classe Model.
+				":despassword"=>User::getPasswordHash($this->getdespassword()),//todos esses getters foram gerados pelo getValues da classe Model.
 				":desemail"=>$this->getdesemail(),
 				":nrphone"=>$this->getnrphone(),
 				":inadmin"=>$this->getinadmin()
@@ -331,6 +360,54 @@
 				":password"=>$password,
 				":iduser"=>$this->getiduser()
 			));
+		}
+
+
+		//método responsável por setar uma mensagem de erro na sessão.
+		public static function setMsgError($msg)
+		{
+
+			$_SESSION[User::ERROR] = $msg;
+
+		}
+
+		//método responsável por pegar a mensagem de erro na sessão.
+		public static function getMsgError()
+		{
+
+			$msg = (isset($_SESSION[User::ERROR]) && $_SESSION[User::ERROR]) ? $_SESSION[User::ERROR] : "";
+
+			User::clearMsgError();
+
+			return $msg;
+
+		}
+
+		//método responsável por limpar o erro da sessao.
+		public static function clearMsgError()
+		{
+
+			$_SESSION[User::ERROR] = NULL;
+
+		}
+
+		//método responsável por limpar o erro da sessao.
+		public static function setErrorRegister($msg)
+		{
+
+			$_SESSION[User::ERROR_REGISTER] = $msg;
+
+		}
+
+
+		//método para fazer criptografia da senha e salvar no banco de dados.
+		public static function getPasswordHash($password)
+		{
+
+			return password_hash($password, PASSWORD_DEFAULT, [
+				'cost'=>12
+			])
+
 		}
 
 	}

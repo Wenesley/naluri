@@ -3,7 +3,7 @@
 use \Naluri\PageAdmin;
 use \Naluri\Model\User;
 
-$app->get('/admin', function() { //qual o link da página principal da Administração.
+$app->get("/admin", function() { //qual o link da página principal da Administração.
     //na rota da administração, é necessário está logado, caso contrário redirecionar para tela de login.
     User::verifyLogin();
 

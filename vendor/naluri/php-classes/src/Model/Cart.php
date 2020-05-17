@@ -205,8 +205,12 @@
 			if($totals['nrqtd'] > 0) {
 
 				//regras validacao para atender requisitos minimos das dimensoes do correio.
-				if($totals['vlheight'] < 2 ) $totals['vlheight'] = 2;
+				
+
+				if($totals['vlheight'] < 2 ) $totals['vlheight'] = 2;				
+
 				if($totals['vllength'] < 16 ) $totals['vllength'] = 16;
+				
 
 				//vamos passar as variáveis na query string. 
 				$qs = http_build_query([
@@ -215,7 +219,7 @@
 					'nCdServico'=>'40010',
 					'sCepOrigem'=>'08226021',
 					'sCepDestino'=>$nrzipcode,
-					'nVlPeso'=>$totals['vlheight'],
+					'nVlPeso'=>$totals['vlweight'],
 					'nCdFormato'=>'1',
 					'nVlComprimento'=>$totals['vllength'],
 					'nVlAltura'=>$totals['vlheight'],
@@ -225,6 +229,9 @@
 					'nVlValorDeclarado'=>$totals['vlprice'],
 					'sCdAvisoRecebimento'=>'S'
 				]);
+
+				//var_dump($totals);
+				//exit;
 				//passando as informações para o webservice dos correios.
 				//vamos ultizar uma função que lê xml, pq a webservice vai retornar no formato xml.
 				//recebe tanto um caminho fisico de um arquivo, quanto um endereço na internet.
@@ -237,6 +244,7 @@
 				//vamos colocar os valores retornado do correios no carrinho de compras.
 				//pegamos o resultado do webservice e amarzemanos na variavel $result.
 				$result = $xml->Servicos->cServico;
+				
 
 				//verica se foi gerado algum erro no retorno do webservice.
 				if($result->MsgErro != '') {
@@ -334,10 +342,12 @@
 			//pega o somatório do total do carrinho de compras.
 			$totals = $this->getProductsTotals();
 
+			//cria variável que não existe para passar para a página cart.html
 			$this->setvlsubtotal($totals['vlprice']);
 
+			//cria variável que não existe para passar para a página cart.html
 			$this->setvltotal($totals['vlprice'] + $this->getvlfreight());
-			
+
 		}
 	}	
 
