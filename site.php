@@ -179,7 +179,10 @@ $app->get("/login", function(){
 	$page = new Page();
 
 	$page->setTpl("login", [
-		'error'=>User::getMsgError() //passando o erro para o template.
+		'error'=>User::getError(), //passando o erro para o template.
+		'errorRegister'=>User::getErrorRegister(), //passando o erro para o template.
+		//passa os dados digitados para o template, para não perder caso gere error.
+		'registerValues'=>(isset($_SESSION['registerValues'])) ? $_SESSION['registerValues'] : ['name'=>'', 'email'=>'', 'phone'=>'']
 	]);
 });
 
@@ -210,6 +213,58 @@ $app->get("/logout", function(){
 	exit;	
 });
 
+
+$app->post("/register", function(){
+
+	//guardar os dados digitados no template, para não perder quando gerar error no template.
+	$_SESSION['registerValues'] = $_POST;
+
+	if(!isset($_POST['name']) || $_POST['name'] == '') {
+
+		User::setErrorRegister("Preencha o seu nome.");
+		header("Location: /login");
+		exit;
+	}
+
+	if(!isset($_POST['email']) || $_POST['email'] == '') {
+
+		User::setErrorRegister("Preencha o seu e-mail.");
+		header("Location: /login");
+		exit;
+	}
+
+	if(!isset($_POST['password']) || $_POST['password'] == '') {
+
+		User::setErrorRegister("Preencha a senha.");
+		header("Location: /login");
+		exit;
+	}
+
+	if (User::checkLoginExist($_POST['email']) === true) {
+		
+		User::setErrorRegister("Este endereço de e-mail já está sendo usado por outro usuário.");
+		header("Location: /login");
+		exit;
+	}
+
+	$user = new User();
+
+	$user->setValues([
+		'inadmin'=>0,
+		'deslogin'=>$_POST['email'],
+		'desperson'=>$_POST['name'],
+		'desemail'=>$_POST['email'],
+		'despassword'=>$_POST['password'],
+		'nrphone'=>$_POST['phone']
+	]);
+
+	$user->save();
+
+	User::login($_POST['email'], $_POST['password']);
+
+	header("Location: /checkout");
+	exit;
+});
 
 
 

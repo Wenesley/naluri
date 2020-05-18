@@ -364,7 +364,7 @@
 
 
 		//método responsável por setar uma mensagem de erro na sessão.
-		public static function setMsgError($msg)
+		public static function setError($msg)
 		{
 
 			$_SESSION[User::ERROR] = $msg;
@@ -372,19 +372,19 @@
 		}
 
 		//método responsável por pegar a mensagem de erro na sessão.
-		public static function getMsgError()
+		public static function getError()
 		{
 
 			$msg = (isset($_SESSION[User::ERROR]) && $_SESSION[User::ERROR]) ? $_SESSION[User::ERROR] : "";
 
-			User::clearMsgError();
+			User::clearError();
 
 			return $msg;
 
 		}
 
 		//método responsável por limpar o erro da sessao.
-		public static function clearMsgError()
+		public static function clearError()
 		{
 
 			$_SESSION[User::ERROR] = NULL;
@@ -399,6 +399,41 @@
 
 		}
 
+		//método responsável por pegar a mensagem de erro na sessão.
+		public static function getErrorRegister()
+		{
+
+			$msg = (isset($_SESSION[User::ERROR_REGISTER]) && $_SESSION[User::ERROR_REGISTER]) ? $_SESSION[User::ERROR_REGISTER] : "";
+
+			User::clearErrorRegister();
+
+			return $msg;
+
+		}
+
+		//método responsável por limpar o erro da sessao.
+		public static function clearErrorRegister()
+		{
+
+			$_SESSION[User::ERROR_REGISTER] = NULL;
+
+		}
+
+
+		//método responsável por verificar se o login já existe no banco de dados.
+		public static function checkLoginExist($login)
+		{
+
+			$sql = new Sql();
+
+			$results = $sql->select("SELECT * FROM tb_users WHERE deslogin = :deslogin", [
+				':deslogin'=>$login
+			]);
+
+			return (count($results) > 0);
+
+		}
+
 
 		//método para fazer criptografia da senha e salvar no banco de dados.
 		public static function getPasswordHash($password)
@@ -406,7 +441,7 @@
 
 			return password_hash($password, PASSWORD_DEFAULT, [
 				'cost'=>12
-			])
+			]);
 
 		}
 
