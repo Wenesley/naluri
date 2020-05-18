@@ -98,9 +98,9 @@ $app->post("/admin/users/create", function() {
     $_POST["inadmin"] = (isset($_POST["inadmin"])) ? 1 : 0;
 
     //código para salvar a senha no banco de dados criptografada.
-    $_POST['despassword'] = password_hash($_POST["despassword"], PASSWORD_DEFAULT, [
- 		"cost"=>12
- 	]);
+    //$_POST['despassword'] = password_hash($_POST["despassword"], PASSWORD_DEFAULT, [
+ 	//	"cost"=>12
+ 	//]);
 
     //pega os dados digitados na págnia users-create.html e atribui os valores para o método setValues responsável por criar setar as variaveis do objeto. Só falta criar um método para salvar no banco de dados.
     $user->setValues($_POST);

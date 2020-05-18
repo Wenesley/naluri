@@ -83,6 +83,7 @@
 					":LOGIN"=>$login
 			));
 
+
 			//verifica se não trouxe resultado do banco de dados, se não trouxe executa a Exception.
 			if(count($results) === 0)
 			{
@@ -91,7 +92,7 @@
 			}
 
 			//passou pelo if, ou seja trouxe resultado que será armazenado na variável $data.
-			$data = $results[0];
+			$data = $results[0];			
 
 			//método password_verify, faz verificação da senha, essa função simplesmente retorna valor boleano.
 			if(password_verify($password, $data["despassword"]) === true) {
@@ -190,7 +191,7 @@
 			$sql = new Sql();
 
 			$results = $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) WHERE a.iduser = :iduser", array(
-				"iduser"=>$iduser
+				":iduser"=>$iduser
 			));
 
 
@@ -214,7 +215,7 @@
 				":iduser"=>$this->getiduser(),
 				":desperson"=>utf8_decode($this->getdesperson()), 
 				":deslogin"=>$this->getdeslogin(),   //pegando os datos que estão no nosso objeto.
-				":despassword"=>User::getPasswordHash($this->getdespassword()),//todos esses getters foram gerados pelo getValues da classe Model.
+				":despassword"=>$this->getdespassword(),//todos esses getters foram gerados pelo getValues da classe Model.
 				":desemail"=>$this->getdesemail(),
 				":nrphone"=>$this->getnrphone(),
 				":inadmin"=>$this->getinadmin()
@@ -231,12 +232,12 @@
 			$sql = new Sql();
 
 			$sql->query("CALL sp_users_delete(:iduser)", array(
-				"iduser"=>$this->getiduser()
+				":iduser"=>$this->getiduser()
 			));
 		}
 
-		//método statico que fazer todas as validações.
-		public static function getForgot($email)
+		//método statico que envia o email para redefinir a senha e que faz todas as validações.
+		public static function getForgot($email, $inadmin = true)
 		{
 
 			$sql = new Sql();
@@ -283,9 +284,22 @@
 
 				$code = base64_encode($code);
 
-				//montar o link, endereço que vai receber esse código, e esse link vai ser enviado por email.
-				// a rota é http://www.naluri.com.br/admin/forgot/reset (link para passar o código e validar), como vamos passar esse código via get ("?") qual código a variável code (code=#code);
-				$link = "http://www.naluri.com.br/admin/forgot/reset?code=$code";
+				
+
+				if($inadmin === true) {
+
+					//montar o link, endereço que vai receber esse código, e esse link vai ser enviado por email.
+					// a rota é http://www.naluri.com.br/admin/forgot/reset (link para passar o código e validar), como vamos passar esse código via get ("?") qual código a variável code (code=#code);
+					$link = "http://www.naluri.com.br/admin/forgot/reset?code=$code";
+
+
+				} else {
+
+					//montar o link, endereço que vai receber esse código, e esse link vai ser enviado por email.
+					// a rota é http://www.naluri.com.br/admin/forgot/reset (link para passar o código e validar), como vamos passar esse código via get ("?") qual código a variável code (code=#code);
+					$link = "http://www.naluri.com.br/forgot/reset?code=$code";
+
+				}
 
 				$subject = "Redefinir senha da Naluri";
 				//o que vamos fazer agora? precisamos enviar por email. Vamos utilizar a classe PhpMailer. PhpMailer é uma classe que já vem pronta, parametrizada, precisamos apenas preencher, e se possível utilizar um template. Para facilitar será criada uma classe como se fosse uma Factory, uma classe que vai criar a configuração do PhpMailer.

@@ -3,9 +3,11 @@
 	use \Naluri\Model\User;
 	
 	//São funções para serem utilizadas nos templates, como escopo global.
-	function formatPrice(float $vlprice)
+	function formatPrice($vlprice)
 	{
-
+		//Validação para quando o carrinho estiver vazio, para não gerar erro.
+		if(!$vlprice > 0) $vlprice = 0;
+		
 		return number_format($vlprice, 2, ",", ".");
 		
 	}
