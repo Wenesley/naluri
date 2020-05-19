@@ -14,6 +14,7 @@
 		const SECRET_IV = "NaluriPhp7password_IV";
 		const ERROR = "UserError"; //não podemos ter constantes com nomes iguais, pois uma sobrescreve a outra.
 		const ERROR_REGISTER = "UserErrorRegister";
+		const SUCCESS = "UserSuccess";
 		
 		public static function getFromSession()
 		{
@@ -375,6 +376,35 @@
 				":iduser"=>$this->getiduser()
 			));
 		}
+
+		//método responsável por setar uma mensagem de erro na sessão.
+		public static function setSuccess($msg)
+		{
+
+			$_SESSION[User::SUCCESS] = $msg;
+
+		}
+
+		//método responsável por pegar a mensagem de erro na sessão.
+		public static function getSuccess()
+		{
+
+			$msg = (isset($_SESSION[User::SUCCESS]) && $_SESSION[User::SUCCESS]) ? $_SESSION[User::SUCCESS] : "";
+
+			User::clearSuccess();
+
+			return $msg;
+
+		}
+
+		//método responsável por limpar o erro da sessao.
+		public static function clearSuccess()
+		{
+
+			$_SESSION[User::SUCCESS] = NULL;
+
+		}
+
 
 
 		//método responsável por setar uma mensagem de erro na sessão.

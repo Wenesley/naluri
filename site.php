@@ -344,4 +344,99 @@ $app->post("/forgot/reset", function() {
 });
 
 
+//rota responsável por criar profile (perfil) do cliente.
+//depois que você loga, poderá ver todos os seus dados...
+$app->get("/profile", function() {
+
+	//false pq não é rota administrativa.
+	User::verifyLogin(false);
+
+	//pega o usuário da sessão.
+	$user = User::getFromSession();
+
+	$page = new Page();
+
+	//chmama o template e passa as informações para o template.
+	$page->setTpl("profile", [
+		'user'=>$user->getValues(),
+		'profileMsg'=>User::getSuccess(),
+		'profileError'=>User::getError()
+	]);
+
+});
+ 
+
+//rota responsável por salvar no bando de dados o profile (perfil) do cliente.
+$app->post("/profile", function() {
+
+	//false pq não é rota administrativa.
+	User::verifyLogin(false);
+
+	//validações do formulario do template
+	if(!isset($_POST['desperson']) || $_POST['desperson'] === ''){
+		User::setError("Preencha o seu nome.");
+
+		echo "entro no if 1";
+		exit;
+
+		header("Location: /profile");
+		exit;
+	}
+
+
+	//validações do formulario do template
+	if(!isset($_POST['desemail']) || $_POST['desemail'] === ''){
+		User::setError("Preencha o seu e-mail.");
+
+		echo "entro no if 2";
+		exit;
+
+		header("Location: /profile");
+		exit;
+	}
+
+	//recuperar o usuário da sessão, pois não sabemos se ele alterou tudo, então assim aproveitamos o que ele já tem, e só trocar o que ele mudou.
+	$user = User::getFromSession();
+
+
+	//verifica se o e-mail já está sendo utilizado por outro usuário.
+	//captura o e-mail digitado no template e verifica se está sendo alterado, se estiver entra no if.
+	if($_POST['desemail'] != $user->getdesemail()){
+
+		echo "entro no if 3";
+		exit;
+		
+		//aqui é verificado se e-mail já está sendo utilizado por outro usuário.
+		if(User::checkLoginExist($_POST['desemail']) === true) {
+			User::setError("Este endereço de e-mail já está cadastrado.");
+
+			echo "entro no if 4";
+			exit;
+
+			header("Location: /profile");
+			exit;
+		}
+	}
+
+
+	//sobrescrevendo inadmin e despasswor que vem do $_POST com getinadmin() e getdespassword() que vem do banco, pois esses dois parametros tem que ser usado o que possui atualmente, mes que decubrua que tenha esse parametros via post. A idea é ignora o que ele está mandando (command inject) e mantenha o que já está no banco. Assim temos certeza que não está alterando essa informação. 
+	$_POST['inadmin'] = $user->getinadmin();
+	$_POST['despassword'] = $user->getdespassword();
+	$_POST['deslogin'] = $_POST['desemail'];
+
+	//atribui o que foi alterado sobrescrevendo o objeto usuário.
+	$user->setValues($_POST);	
+
+	//altera os ddos no bando de dados.
+	$user->update();
+
+	//Obs.: para verificação do usuário dos novos dados, este deve deslogar e logar novamente.
+	User::setSuccess("Dados alterados com sucesso.");
+
+	header("Location: /profile");
+	exit;
+
+});
+
+
 ?>
