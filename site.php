@@ -281,7 +281,8 @@ $app->post("/checkout", function() {
 
 	$cart = Cart::getFromSession();
 
-	$totals = $cart->getCalculateTotal();
+	//força o calculo do carrinho de compras e atribui os valores para variáveis da classe Cart.
+	$cart->getCalculateTotal();
 
 	$order = new Order();
 
@@ -290,7 +291,7 @@ $app->post("/checkout", function() {
 		'idaddress'=>$address->getidaddress(),
 		'iduser'=>$user->getiduser(),
 		'idstatus'=>OrderStatus::EM_ABERTO,
-		'vltotal'=>$totals['vlprice'] + $cart->getvlfreight()
+		'vltotal'=>$cart->getvltotal()
 	]);
 
 	//salva o pedido, aí então, o pedido ganha um ID, que passamos esse ID para próxima rota (/order/:idorder).	
@@ -659,7 +660,46 @@ $app->get("/boleto/:idorder", function($idorder){
 
 	require_once($path . "funcoes_itau.php");
 	require_once($path . "layout_itau.php");
+});
 
+
+//rota responsável por buscar todos os pedidos do usuário.
+$app->get("/profile/orders", function(){
+
+	User::verifyLogin(false);
+
+	$user = User::getFromSession();
+
+	$page = new Page();	
+
+	$page->setTpl("profile-orders", [
+		'orders'=>$user->getOrders()
+	]);
+});
+
+
+//rota responsável por mostar os detalhes de cada pedido.
+$app->get("/profile/orders/:idorder", function($idorder) {
+
+	User::verifyLogin(false);
+
+	$order = new Order();
+
+	$order->get((int)$idorder);
+
+	$cart = new Cart();
+
+	$cart->get((int)$order->getidcart());
+
+	$cart->getCalculateTotal();
+
+	$page = new Page();
+
+	$page->setTpl("profile-orders-detail", [
+		'order'=>$order->getValues(),
+		'cart'=>$cart->getValues(),
+		'products'=>$cart->getProducts()		
+	]);
 });
 
 

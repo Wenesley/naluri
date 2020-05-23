@@ -1,6 +1,7 @@
 <?php
 	
 	use \Naluri\Model\User;
+	use \Naluri\Model\Cart;
 	
 	//São funções para serem utilizadas nos templates, como escopo global.
 	function formatPrice($vlprice)
@@ -28,6 +29,28 @@
 	
 		return $user->getdesperson();
 
+	}
+
+	//função para calcular a quantidade de itens no carrinho.
+	function getCartNrQtd()
+	{
+
+		$cart = Cart::getFromSession();
+
+		$totals = $cart->getProductsTotals();
+
+		return $totals['nrqtd'];
+	}
+
+	//função para calcular o valor do carrinho de compras.
+	function getCartVlSubTotal()
+	{
+
+		$cart = Cart::getFromSession();
+
+		$totals = $cart->getProductsTotals();
+
+		return formatPrice($totals['vlprice']);
 	}
 
 ?>
