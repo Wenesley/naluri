@@ -120,10 +120,12 @@ $app->post("/admin/forgot/reset", function() {
 	//pega os dados do usuário pelo id.
 	$user->get((int)$forgot["iduser"]);
 
+	/*
 	//código para salvar a senha no banco de dados criptografada.
     $password = password_hash($_POST["password"], PASSWORD_DEFAULT, [
  		"cost"=>12
  	]);
+ 	*/
 
 	//chama o metodo setPassword para salvar a senha que veio do formulário. Foi criado esse método pq precisamos salvar no banco o hash da senha que será codificado nesse método.
 	$user->setPassword($password);

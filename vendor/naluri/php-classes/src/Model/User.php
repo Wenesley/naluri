@@ -216,7 +216,7 @@
 				":iduser"=>$this->getiduser(),
 				":desperson"=>utf8_decode($this->getdesperson()), 
 				":deslogin"=>$this->getdeslogin(),   //pegando os datos que estão no nosso objeto.
-				":despassword"=>$this->getdespassword(),//todos esses getters foram gerados pelo getValues da classe Model.
+				":despassword"=>User::getPasswordHash($this->getdespassword()),//todos esses getters foram gerados pelo getValues da classe Model.
 				":desemail"=>$this->getdesemail(),
 				":nrphone"=>$this->getnrphone(),
 				":inadmin"=>$this->getinadmin()
