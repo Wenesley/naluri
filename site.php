@@ -295,8 +295,7 @@ $app->post("/checkout", function() {
 	]);
 
 	//salva o pedido, aí então, o pedido ganha um ID, que passamos esse ID para próxima rota (/order/:idorder).	
-	$order->save();
-	
+	$order->save();	
 	
 	//redireciona para pagamento.
 	//passamos o id do pedido gerado para ser utilizado na geração do boleto (payment).
