@@ -12,12 +12,45 @@ $app->get("/admin/categories", function(){
     User::verifyLogin();
 
 	//Precisamos criar a classe e o método que listará todas as categorias, e atribuir à variável $categories, para preencher o segundo parametro (dados, variaveis) do metodo setTpl, para enviar para o template categories.html.
-	$categories = Category::listAll();
+	//$categories = Category::listAll(); //Antes do search...
+
+	$search = (isset($_GET['search'])) ? $_GET['search'] : "";
+
+    //qual é a página atual?
+    $page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
+
+    if($search != '') {
+
+        //rotina que lista todos os usuários do banco de dados, método listAll static na classe Users.
+        $pagination = Category::getPageSearch($search, $page, 1);
+
+    } else {
+
+        //rotina que lista todos os usuários do banco de dados, método listAll static na classe Users.
+        $pagination = Category::getPage($page, 1);
+    }
+
+    $pages = [];
+
+    for ($x = 0; $x < $pagination['pages']; $x++){
+
+        array_push($pages, [
+            'href'=>"/admin/categories?".http_build_query([
+                'page'=>$x+1,
+                'search'=>$search
+            ]),
+            'text'=>$x+1
+
+        ]);
+    }
 
 	$page = new PageAdmin();
 
 	$page->setTpl("categories", [
-		'categories'=>$categories //Exite um loop no template, então precisamos chamar a variável e criar uma lista para precher o loop.
+		//'categories'=>$categories //Exite um loop no template, então precisamos chamar a variável e criar uma lista para precher o loop.
+		"categories"=>$pagination['data'], //como projetado no setTpl, o segundo parametro passa os dados da lista para o template.
+        "search"=>$search,
+        "pages"=>$pages
 
 	]);//inclui o template no metodo setTpl para abir a página.
 });
