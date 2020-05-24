@@ -513,6 +513,74 @@
 			return $results;
 		}
 
+
+		//método responsável pela panginação dos produtos.
+		//recebe dois parametros, qual página estamos e quantos item queremos por página.
+		public static function getPage($page = 1, $itemsPerPage = 10)
+		{
+
+			$start = ($page - 1) * $itemsPerPage;
+
+			$sql = new Sql();
+
+			//busca todos os produtos por categoria.
+			$results = $sql->select("
+				SELECT SQL_CALC_FOUND_ROWS *
+				FROM tb_users a 
+				INNER JOIN tb_persons b USING(idperson) 
+				ORDER BY b.desperson
+				LIMIT $start, $itemsPerPage;			
+			");
+
+			//retorna a quantidade de items que tem.
+			$resultsTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
+
+			//retorna todos os produtos(dados dos produtos), a quantidade linhas(quantos registros vieram)
+			//e a quantidade de páginas. (ceil função php que arredonda para cima)
+			return [
+				'data'=>$results,
+				'total'=>$resultsTotal[0]["nrtotal"],
+				'pages'=>ceil($resultsTotal[0]["nrtotal"] / $itemsPerPage)				
+			];
+
+		}
+
+
+		//método responsável pela panginação dos produtos.
+		//recebe dois parametros, qual página estamos e quantos item queremos por página.
+		public static function getPageSearch($search, $page = 1, $itemsPerPage = 10)
+		{
+
+			$start = ($page - 1) * $itemsPerPage;
+
+			$sql = new Sql();
+
+			//busca todos os produtos por categoria.
+			$results = $sql->select("
+				SELECT SQL_CALC_FOUND_ROWS *
+				FROM tb_users a 
+				INNER JOIN tb_persons b USING(idperson) 
+				WHERE b.desperson LIKE :search OR b.desemail = :search OR a.deslogin LIKE :search
+				ORDER BY b.desperson
+				LIMIT $start, $itemsPerPage;			
+			", [
+				':search'=>'%'.$search.'%'
+
+			]);
+
+			//retorna a quantidade de items que tem.
+			$resultsTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
+
+			//retorna todos os produtos(dados dos produtos), a quantidade linhas(quantos registros vieram)
+			//e a quantidade de páginas. (ceil função php que arredonda para cima)
+			return [
+				'data'=>$results,
+				'total'=>$resultsTotal[0]["nrtotal"],
+				'pages'=>ceil($resultsTotal[0]["nrtotal"] / $itemsPerPage)				
+			];
+
+		}
+
 	}
 
 ?>

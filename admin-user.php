@@ -10,15 +10,43 @@ $app->get('/admin/users', function() {
 	//na rota da administração, é necessário está logado, caso contrário redirecionar para tela de login.
     User::verifyLogin();
 
-    //rotina que lista todos os usuários do banco de dados, método listAll static na classe Users.
-    $users = User::listAll();
+    $search = (isset($_GET['search'])) ? $_GET['search'] : "";
+
+    //qual é a página atual?
+    $page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
+
+    if($search != '') {
+
+        //rotina que lista todos os usuários do banco de dados, método listAll static na classe Users.
+        $pagination = User::getPageSearch($search, $page);
+
+    } else {
+
+        //rotina que lista todos os usuários do banco de dados, método listAll static na classe Users.
+        $pagination = User::getPage($page);
+    }
+
+    $pages = [];
+
+    for ($x = 0; $x < $pagination['pages']; $x++){
+
+        array_push($pages, [
+            'href'=>"/admin/users?".http_build_query([
+                'page'=>$x+1,
+                'search'=>$search
+            ]),
+            'text'=>$x+1
+
+        ]);
+    }
 
 	$page = new PageAdmin(); //Nesse momento de criação da página, o construtor é acionado e cria o header.html.	
 
 	$page->setTpl("users", array(
 
-		"users"=>$users //como projetado no setTpl, o segundo parametro passa os dados da lista para o template.
-
+		"users"=>$pagination['data'], //como projetado no setTpl, o segundo parametro passa os dados da lista para o template.
+        "search"=>$search,
+        "pages"=>$pages
 	));//quando chamamos o metodo setTpl e passamos o template, nesse caso ele chama a página users.html e adiciona o corpo da página. quando seguir para próxima linha após a chamda encerra a execução, ou seja limpa a memória do seu site, e automaticamente o método destruct é acionado, o arquivo footer.html e inserido no template.
 
 
