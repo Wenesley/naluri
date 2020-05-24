@@ -93,10 +93,43 @@ $app->get("/admin/orders", function(){
 
     User::verifyLogin();
 
+    $search = (isset($_GET['search'])) ? $_GET['search'] : "";
+
+    //qual é a página atual?
+    $page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
+
+    if($search != '') {
+
+        //rotina que lista todos os usuários do banco de dados, método listAll static na classe Users.
+        $pagination = Order::getPageSearch($search, $page, 1);
+
+    } else {
+
+        //rotina que lista todos os usuários do banco de dados, método listAll static na classe Users.
+        $pagination = Order::getPage($page, 1);
+    }
+
+    $pages = [];
+
+    for ($x = 0; $x < $pagination['pages']; $x++){
+
+        array_push($pages, [
+            'href'=>"/admin/orders?".http_build_query([
+                'page'=>$x+1,
+                'search'=>$search
+            ]),
+            'text'=>$x+1
+
+        ]);
+    }
+
     $page = new PageAdmin();
 
     $page->setTpl("orders", [
-        'orders'=>Order::listAll()
+        //'orders'=>Order::listAll(), //antes da paginacao.
+        "orders"=>$pagination['data'], //como projetado no setTpl, o segundo parametro passa os dados da lista para o template.
+        "search"=>$search,
+        "pages"=>$pages
     ]);
 
 });
