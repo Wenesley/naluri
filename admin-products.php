@@ -8,12 +8,45 @@ $app->get("/admin/products", function() {
 
 	User::verifyLogin();
 
-	$products = Product::listAll();
+	//$products = Product::listAll(); //antes do search.
+
+	$search = (isset($_GET['search'])) ? $_GET['search'] : "";
+
+    //qual é a página atual?
+    $page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
+
+    if($search != '') {
+
+        //rotina que lista todos os usuários do banco de dados, método listAll static na classe Users.
+        $pagination = Product::getPageSearch($search, $page, 1);
+
+    } else {
+
+        //rotina que lista todos os usuários do banco de dados, método listAll static na classe Users.
+        $pagination = Product::getPage($page, 1);
+    }
+
+    $pages = [];
+
+    for ($x = 0; $x < $pagination['pages']; $x++){
+
+        array_push($pages, [
+            'href'=>"/admin/products?".http_build_query([
+                'page'=>$x+1,
+                'search'=>$search
+            ]),
+            'text'=>$x+1
+
+        ]);
+    }
 
 	$page = new PageAdmin();
 
 	$page->setTpl("products", [
-		"products"=>$products
+		//"products"=>$products //antes do search
+		"products"=>$pagination['data'], //como projetado no setTpl, o segundo parametro passa os dados da lista para o template.
+        "search"=>$search,
+        "pages"=>$pages
 	]);
 });
 
