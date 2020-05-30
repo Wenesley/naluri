@@ -297,10 +297,22 @@ $app->post("/checkout", function() {
 
 	//salva o pedido, aí então, o pedido ganha um ID, que passamos esse ID para próxima rota (/order/:idorder).	
 	$order->save();	
+
+
+	switch ((int)$_POST['payment-method']) {
+		case 1:
+			//redireciona para pagamento.
+			//passamos o id do pedido gerado para ser utilizado na geração do boleto (payment).
+			header("Location: /order/".$order->getidorder()."/pagseguro");
+			break;
+
+		case 2:
+			//redireciona para pagamento.
+			//passamos o id do pedido gerado para ser utilizado na geração do boleto (payment).
+			header("Location: /order/".$order->getidorder()."/paypal");
+			break;		
+	}	
 	
-	//redireciona para pagamento.
-	//passamos o id do pedido gerado para ser utilizado na geração do boleto (payment).
-	header("Location: /order/".$order->getidorder()."/pagseguro");
 	exit;
 
 });
@@ -329,6 +341,28 @@ $app->get("/order/:idorder/pagseguro", function($idorder){
 			'areaCode'=>substr($order->getnrphone(), 0, 2),
 			'number'=>substr($order->getnrphone(), 2, strlen($order->getnrphone()))
 		]
+	]);
+});
+
+$app->get("/order/:idorder/paypal", function($idorder){
+
+	User::verifyLogin(false);
+
+	$order = new Order();	
+
+	$order->get((int)$idorder);
+
+	$cart = $order->getCart();
+
+	$page = new Page([
+		'header'=>false,
+		'footer'=>false
+	]);
+
+	$page->setTpl("payment-paypal", [
+		'order'=>$order->getValues(),
+		'cart'=>$cart->getValues(),
+		'products'=>$cart->getProducts()		
 	]);
 });
 
