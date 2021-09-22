@@ -7,9 +7,9 @@ use Rain\Tpl;//vamos fazer renderização de template html, por isso utilizamos 
 //classe para enviar email
 class Mailer {
 	
-	const USERNAME = "wluzsantosdev@gmail.com";
-	const PASSWORD = "{25Analuisa02}";
-	const NAME_FROM = "Naluri"; //nome do remetente.
+	const USERNAME = "";
+	const PASSWORD = "";
+	const NAME_FROM = ""; //nome do remetente.
 
 	private $mail;
 
